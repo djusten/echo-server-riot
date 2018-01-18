@@ -36,6 +36,7 @@ void *_udp_server(void *args)
     }
 
     sock_udp_ep_t server = { .port = (int)args, .family = AF_INET6 };
+
     memset(&server_buffer, '\0', sizeof(server_buffer));
 
     if(sock_udp_create(&sock, &server, NULL, 0) < 0) {
@@ -49,9 +50,16 @@ void *_udp_server(void *args)
     while (server_running) {
 
         if ((res = sock_udp_recv(&sock, server_buffer,
-                                 sizeof(server_buffer) - 1, SOCK_NO_TIMEOUT,
+                                 sizeof(server_buffer) - 1, 1 * US_PER_SEC,
                                  &remote)) < 0) {
-            printf("Error while receiving udp packet\n");
+            if (res != -ETIMEDOUT) {
+                printf("Error while receiving udp packet\n");
+                continue;
+            }
+
+            if (!server_running) {
+                break;
+            }
         }
         else {
             server_buffer[res] = '\0';
