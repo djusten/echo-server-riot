@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018  Diogo Justen. All rights reserved.
+ * Copyright (C) 2017  Diogo Justen. All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,23 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <shell.h>
-#include <string.h>
-#include "server.h"
+#ifndef SERVER_H__
+#define SERVER_H__
 
-static const shell_command_t shell_commands[] = {
-    { "server_start", "start udp server", server_start },
-    { "server_stop", "stop udp server", server_stop },
-    { NULL, NULL, NULL }
-};
+int server_start(int argc, char **argv);
+int server_stop(int argc, char **argv);
 
-int main(void)
-{
-    char line_buf[SHELL_DEFAULT_BUFSIZE];
-
-    memset(&line_buf, '\0', sizeof(line_buf));
-
-    shell_run(shell_commands, line_buf, SHELL_DEFAULT_BUFSIZE);
-
-    return 0;
-}
+#endif // SERVER_H__
