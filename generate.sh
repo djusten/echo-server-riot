@@ -6,6 +6,7 @@ RIOT_DIR=${SRC_DIR}/RIOT
 BIN_DIR=${SRC_DIR}/bin
 TAPSETUP_CMD=${RIOT_DIR}/dist/tools/tapsetup/tapsetup
 TAP0_CLASS_FOLDER=/sys/class/net/tap0/
+BINARY_FILE=${SRC_DIR}/bin/native/echo_server.elf
 
 prepare () {
     echo ">>> Preparing environment..."
@@ -34,20 +35,28 @@ prepare () {
 gitclone () {
     echo ">>> Cloning environment..."
 
-    if [ ! -d ${RIOT_DIR} ]; then
-        git clone https://github.com/RIOT-OS/RIOT ${RIOT_DIR}
+    if [ -d ${RIOT_DIR} ]; then
+        echo "RIOT directory already exist"
+        return
     fi
+
+    git clone https://github.com/RIOT-OS/RIOT ${RIOT_DIR}
 }
 
 interface () {
-    echo -n">>> Creating interface tap0 and tap1..."
+    echo ">>> Creating interface tap0 and tap1..."
+
+    if [ -d "${TAP0_CLASS_FOLDER}" ]; then
+        echo "tap0 interface already exist"
+        return
+    fi
+
+    if [ ! -f "${TAPSETUP_CMD}" ]; then
+        echo "RIOT not cloned. Run: $0 -g"
+        return
+    fi
 
     ${TAPSETUP_CMD} -c
-    if [ $? ]; then
-        echo "OK"
-    else
-        echo "Error"
-    fi
 }
 
 build () {
@@ -55,7 +64,7 @@ build () {
 
     if [ ! -d ${RIOT_DIR} ]; then
         echo "! RIOT dir does not exist."
-        echo "Run: $0 -c"
+        echo "Run: $0 -g"
         return
     fi
 
@@ -67,15 +76,25 @@ run () {
 
     if [ ! -d "${TAP0_CLASS_FOLDER}" ]; then
         echo "Tap0 interface not exist. Run: $0 -i"
+        return
     fi
 
-    ${SRC_DIR}/bin/native/echo_server.elf tap0
+    if [ ! -f "${BINARY_FILE}" ]; then
+        echo "Project not compiled. Run: $0 -b"
+        return
+    fi
+
+    ${BINARY_FILE} tap0
 }
 
 clean () {
     echo ">>> Cleaning..."
+
     make clean RIOT_DIR=${RIOT_DIR}
-    rm -rf ${BIN_DIR}
+
+    if [ -d ${BIN_DIR} ]; then
+        rm -rf ${BIN_DIR}
+    fi
 }
 
 deepclean () {
@@ -88,9 +107,9 @@ deepclean () {
         return
     fi
 
-    rm -rf ${RIOT_DIR} 2> /dev/null
-
     ${TAPSETUP_CMD} -d
+
+    rm -rf ${RIOT_DIR} 2> /dev/null
 }
 
 invalid() {
@@ -115,9 +134,9 @@ usage() {
     echo "  -g \t\tClone RIOT repository"
     echo "  -i \t\tCreate ethernet interface (requires sudo)"
     echo "  -b \t\tBuild"
-    echo "  -r <port> \tRun sample test on specific <port>"
+    echo "  -r \t\tRun application"
     echo "  -c \t\tClean"
-    echo "  -d \t\tErase build dir"
+    echo "  -d \t\tClean all temporary files and remove ethernet interface (requires sudo)"
     echo ""
 }
 
