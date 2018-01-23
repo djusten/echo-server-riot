@@ -25,5 +25,8 @@ USEMODULE += auto_init_gnrc_netif
 USEMODULE += gnrc_ipv6_default
 USEMODULE += gnrc_icmpv6_echo
 USEMODULE += gnrc_sock_udp
+USEMODULE += core_thread_flags
+USEMODULE += event_callback
+USEMODULE += event_timeout
 
 include $(RIOTBASE)/Makefile.include
